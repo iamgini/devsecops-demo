@@ -60,6 +60,13 @@ jobs:
       #     cosign generate-key-pair || echo "Keys already exist"
       #     cosign sign --key cosign.key --force --insecure-ignore-tlog demo-app:${{ github.sha }}
 
+      - name: Install OPA
+        run: |
+          OPA_VERSION="v0.48.0"
+          curl -L -o opa https://openpolicyagent.org/downloads/${OPA_VERSION}/opa_linux_amd64
+          chmod +x opa
+          sudo mv opa /usr/local/bin/
+
                 
       - name: OPA policy check
         run: |
