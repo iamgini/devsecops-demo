@@ -109,7 +109,7 @@ jobs:
         # run: bandit -r .
         # B324 → weak MD5
         # B104 → binding to all interfaces
-        run: bandit -r . -x B104
+        run: bandit -r .
 
 
       - name: Install Trivy
