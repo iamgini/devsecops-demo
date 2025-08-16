@@ -56,10 +56,11 @@ jobs:
           output-file: sbom.json
 
       - name: Upload SBOM as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sbom
           path: sbom.json
+          include-hidden-files: true
 
       - name: Scan SBOM for vulnerabilities
         uses: anchore/scan-action@v2
