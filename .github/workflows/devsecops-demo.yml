@@ -45,7 +45,8 @@ jobs:
           trivy --version
 
       - name: Trivy container scan
-        run: trivy image quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+        # run: trivy image quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+        run: trivy image flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
         
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
