@@ -16,7 +16,12 @@ def get_version():
         return "v0.0.0"
 
 def get_bg_color(version):
-    idx = int(hashlib.md5(version.encode()).hexdigest(), 16) % len(BG_COLORS)
+    # problematic line for bandit test
+    # idx = int(hashlib.md5(version.encode()).hexdigest(), 16) % len(BG_COLORS)
+
+    # clean line
+    idx = int(hashlib.sha256(version.encode()).hexdigest(), 16) % len(BG_COLORS)
+
     return BG_COLORS[idx]
 
 HTML_TEMPLATE = """
