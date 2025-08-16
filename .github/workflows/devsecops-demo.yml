@@ -86,7 +86,7 @@ jobs:
         run: bandit -r .
 
       - name: Trivy Scan
-        uses: aquasecurity/trivy-action@v2
+        uses: aquasecurity/trivy-action@v0.32.0
         with:
           image-ref: quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
 
