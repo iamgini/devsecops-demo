@@ -57,5 +57,8 @@ kubectl port-forward svc/flask-demo-service 8080:5000
 For testing app changes
 
 ```shell
+# blue
 echo "v0.0.2" > VERSION.txt
+
+
 ```
