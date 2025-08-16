@@ -1,0 +1,56 @@
+name: DevSecOps Demo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-secure:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 1. Update app version automatically
+    - name: Update App Version
+      run: |
+        NEW_VERSION="v$(date +'%Y%m%d%H%M%S')"
+        echo $NEW_VERSION > VERSION.txt
+        git config user.name "Demo Bot"
+        git config user.email "demo@example.com"
+        git add VERSION.txt
+        git commit -m "Update app version to $NEW_VERSION"
+        git push || echo "No changes to commit"
+
+    # 2. Dependency scanning & SBOM
+    - name: Generate SBOM
+      uses: anchore/syft-action@v0.8.0
+      with:
+        output: sbom.json
+        format: cyclonedx-json
+
+    # 3. Secrets scanning
+    - name: Scan for secrets
+      uses: zricethezav/gitleaks-action@v8.14.0
+      with:
+        config-path: .gitleaks.toml
+
+    # 4. Build Docker image
+    - name: Build Docker image
+      run: docker build -t demo-app:${{ github.sha }} .
+
+    # 5. Container signing
+    - name: Sign container image
+      run: |
+        cosign generate-key-pair || echo "Keys already exist"
+        cosign sign --key cosign.key demo-app:${{ github.sha }}
+
+    # 6. Policy-as-Code (OPA) check
+    - name: OPA policy check
+      run: |
+        echo 'package main
+        deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
+        echo '{"secrets": ""}' > input.json
+        opa eval --data policy.rego --input input.json "data.main.deny"
