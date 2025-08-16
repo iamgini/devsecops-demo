@@ -51,3 +51,11 @@ kubectl rollout status deployment/flask-demo
 kubectl port-forward svc/flask-demo-service 8080:5000
 
 ```
+
+## Change app
+
+For testing app changes
+
+```shell
+echo "v0.0.2" > VERSION.txt
+```

@@ -86,3 +86,10 @@ jobs:
           deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
           echo '{"secrets": ""}' > input.json
           opa eval --data policy.rego --input input.json "data.main.deny"
+
+      - name: Print Commit SHA
+        run: |
+          echo "=================================="
+          echo " Commit SHA: $GITHUB_SHA"
+          echo "=================================="
+          
