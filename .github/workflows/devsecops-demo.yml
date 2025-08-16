@@ -1,49 +1,44 @@
-name: DevSecOps Demo
+# 1. Checkout
+- name: Checkout code
+  uses: actions/checkout@v3
 
-on:
-  push:
-    branches:
-      - main
+# 2. Update version
+- name: Update App Version
+  run: |
+    NEW_VERSION="v$(date +'%Y%m%d%H%M%S')"
+    echo $NEW_VERSION > VERSION.txt
+    git config user.name "Demo Bot"
+    git config user.email "demo@example.com"
+    git add VERSION.txt
+    git commit -m "Update app version to $NEW_VERSION"
+    git push || echo "No changes to commit"
 
-jobs:
-  build-and-secure:
-    runs-on: ubuntu-latest
+# 3. Build Docker image first
+- name: Build Docker image
+  run: docker build -t demo-app:${{ github.sha }} .
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+# 4. Generate SBOM
+- name: Generate SBOM
+  uses: anchore/sbom-action@v0
+  with:
+    image: demo-app:${{ github.sha }}
 
-    - name: Update App Version
-      run: |
-        NEW_VERSION="v$(date +'%Y%m%d%H%M%S')"
-        echo $NEW_VERSION > VERSION.txt
-        git config user.name "Demo Bot"
-        git config user.email "demo@example.com"
-        git add VERSION.txt
-        git commit -m "Update app version to $NEW_VERSION"
-        git push || echo "No changes to commit"
+# 5. Scan for secrets
+- name: Scan for secrets
+  uses: gitleaks/gitleaks-action@v2
+  with:
+    version: latest
 
-    - name: Generate SBOM
-      uses: anchore/sbom-action@v0
-      with:
-        image: demo-app:${{ github.sha }}
+# 6. Sign container
+- name: Sign container image
+  run: |
+    cosign generate-key-pair || echo "Keys already exist"
+    cosign sign --key cosign.key demo-app:${{ github.sha }}
 
-    - name: Scan for secrets
-      uses: gacts/gitleaks@v1
-      with:
-        version: v8.x
-
-    - name: Build Docker image
-      run: docker build -t demo-app:${{ github.sha }} .
-
-    - name: Sign container image
-      run: |
-        cosign generate-key-pair || echo "Keys already exist"
-        cosign sign --key cosign.key demo-app:${{ github.sha }}
-
-    - name: OPA policy check
-      run: |
-        echo 'package main
-        deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
-        echo '{"secrets": ""}' > input.json
-        opa eval --data policy.rego --input input.json "data.main.deny"
+# 7. OPA policy
+- name: OPA policy check
+  run: |
+    echo 'package main
+    deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
+    echo '{"secrets": ""}' > input.json
+    opa eval --data policy.rego --input input.json "data.main.deny"
