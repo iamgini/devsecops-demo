@@ -60,11 +60,6 @@ jobs:
           chmod +x cosign
           sudo mv cosign /usr/local/bin/
 
-      # - name: Sign image
-      #   run: |
-      #     cosign generate-key-pair || echo "Keys already exist"
-      #     cosign sign --key cosign.key --force --insecure-ignore-tlog quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
-
   secret-scan:
     runs-on: ubuntu-latest
     needs: checkout
@@ -75,9 +70,29 @@ jobs:
         with:
           scan_all: true
 
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Python and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip install bandit
+
+      - name: Run Bandit security scan
+        run: bandit -r .
+
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@v2
+        with:
+          image-ref: quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+
   opa-check:
     runs-on: ubuntu-latest
-    needs: [secret-scan, build-and-publish]
+    needs: [secret-scan, build-and-publish, security-scan]
     steps:
       - uses: actions/checkout@v3
       - name: Install OPA
