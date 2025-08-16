@@ -44,8 +44,7 @@ Secrets:
 kubectl apply -f deployment.yaml
 
 SHA=$(git rev-parse HEAD)
-kubectl set image deployment/flask-demo \
-  flask-demo=quay.io/iamgini/flask-devsecops-demo:$SHA
+kubectl set image deployment/flask-demo flask-demo=quay.io/iamgini/flask-devsecops-demo:$SHA
 kubectl rollout status deployment/flask-demo
 
 kubectl port-forward svc/flask-demo-service 8080:5000
@@ -54,7 +53,7 @@ kubectl port-forward svc/flask-demo-service 8080:5000
 
 ## Test scenarios
 
-### Change app version or color
+### 1. Change app version or color
 
 For testing app changes
 
@@ -62,3 +61,7 @@ For testing app changes
 # blue
 echo "v0.0.2" > VERSION.txt
 ```
+
+### 2. MD5 usage in app
+
+Comment `# skips = B104` in the `.bandit` file.
