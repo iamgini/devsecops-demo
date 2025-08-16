@@ -1,44 +1,49 @@
-# 1. Checkout
-- name: Checkout code
-  uses: actions/checkout@v3
+name: DevSecOps Demo
 
-# 2. Update version
-- name: Update App Version
-  run: |
-    NEW_VERSION="v$(date +'%Y%m%d%H%M%S')"
-    echo $NEW_VERSION > VERSION.txt
-    git config user.name "Demo Bot"
-    git config user.email "demo@example.com"
-    git add VERSION.txt
-    git commit -m "Update app version to $NEW_VERSION"
-    git push || echo "No changes to commit"
+on:
+  push:
+    branches:
+      - main
 
-# 3. Build Docker image first
-- name: Build Docker image
-  run: docker build -t demo-app:${{ github.sha }} .
+jobs:
+  build-and-secure:
+    runs-on: ubuntu-latest
 
-# 4. Generate SBOM
-- name: Generate SBOM
-  uses: anchore/sbom-action@v0
-  with:
-    image: demo-app:${{ github.sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-# 5. Scan for secrets
-- name: Scan for secrets
-  uses: gitleaks/gitleaks-action@v2
-  with:
-    version: latest
+      - name: Update App Version
+        run: |
+          NEW_VERSION="v$(date +'%Y%m%d%H%M%S')"
+          echo $NEW_VERSION > VERSION.txt
+          git config user.name "Demo Bot"
+          git config user.email "demo@example.com"
+          git add VERSION.txt
+          git commit -m "Update app version to $NEW_VERSION"
+          git push || echo "No changes to commit"
 
-# 6. Sign container
-- name: Sign container image
-  run: |
-    cosign generate-key-pair || echo "Keys already exist"
-    cosign sign --key cosign.key demo-app:${{ github.sha }}
+      - name: Build Docker image
+        run: docker build -t demo-app:${{ github.sha }} .
 
-# 7. OPA policy
-- name: OPA policy check
-  run: |
-    echo 'package main
-    deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
-    echo '{"secrets": ""}' > input.json
-    opa eval --data policy.rego --input input.json "data.main.deny"
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: demo-app:${{ github.sha }}
+
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          version: latest
+
+      - name: Sign container image
+        run: |
+          cosign generate-key-pair || echo "Keys already exist"
+          cosign sign --key cosign.key demo-app:${{ github.sha }}
+
+      - name: OPA policy check
+        run: |
+          echo 'package main
+          deny[msg] { input.secrets != "" ; msg = "Secrets found in repo" }' > policy.rego
+          echo '{"secrets": ""}' > input.json
+          opa eval --data policy.rego --input input.json "data.main.deny"
