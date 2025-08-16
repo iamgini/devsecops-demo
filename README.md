@@ -60,5 +60,4 @@ For testing app changes
 # blue
 echo "v0.0.2" > VERSION.txt
 
-
 ```

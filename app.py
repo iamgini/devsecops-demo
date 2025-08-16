@@ -1,5 +1,6 @@
 from flask import Flask, render_template_string
 import hashlib
+from datetime import datetime
 
 app = Flask(__name__)
 APP_NAME = "DevSecOps Demo"
@@ -15,13 +16,13 @@ def get_version():
     except FileNotFoundError:
         return "v0.0.0"
 
+def get_build_version():
+    # Dynamic version for demo / CI builds
+    return f"v{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
 def get_bg_color(version):
-    # problematic line for bandit test
-    # idx = int(hashlib.md5(version.encode()).hexdigest(), 16) % len(BG_COLORS)
-
-    # clean line
+    # Use SHA-256 for Bandit clean scan
     idx = int(hashlib.sha256(version.encode()).hexdigest(), 16) % len(BG_COLORS)
-
     return BG_COLORS[idx]
 
 HTML_TEMPLATE = """
@@ -53,6 +54,7 @@ HTML_TEMPLATE = """
   <body>
     <h1>{{ app_name }}</h1>
     <p>App Version: {{ version }}</p>
+    <p>Build Version: {{ build_version }}</p>
     <div class="badge">Demo</div>
   </body>
 </html>
@@ -61,8 +63,15 @@ HTML_TEMPLATE = """
 @app.route("/")
 def home():
     version = get_version()
+    build_version = get_build_version()
     bg_color = get_bg_color(version)
-    return render_template_string(HTML_TEMPLATE, version=version, bg_color=bg_color, app_name=APP_NAME)
+    return render_template_string(
+        HTML_TEMPLATE,
+        version=version,
+        build_version=build_version,
+        bg_color=bg_color,
+        app_name=APP_NAME
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
