@@ -24,12 +24,12 @@ jobs:
           git push || echo "No changes to commit"
 
       - name: Build Docker image
-        run: docker build -t demo-app:${{ github.sha }} .
+        run: docker build -t flask-devsecops-demo:${{ github.sha }} .
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: demo-app:${{ github.sha }}
+          image: flask-devsecops-demo:${{ github.sha }}
 
       - name: Scan for secrets
         uses: gitleaks/gitleaks-action@v2
@@ -44,9 +44,21 @@ jobs:
 
       # - name: Push image
       #   run: |
-      #     docker tag demo-app:${{ github.sha }} yourusername/demo-app:${{ github.sha }}
-      #     docker push yourusername/demo-app:${{ github.sha }}
+      #     docker tag flask-devsecops-demo:${{ github.sha }} yourusername/flask-devsecops-demo:${{ github.sha }}
+      #     docker push yourusername/flask-devsecops-demo:${{ github.sha }}
           
+      - name: Login to Quay
+        uses: docker/login-action@v2
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Push image to Quay
+        run: |
+          docker tag flask-devsecops-demo:${{ github.sha }} quay.io/iamgini/flask-devsecops-demo:${{ github.sha }}
+          docker push quay.io/iamgini/flask-devsecops-demo:${{ github.sha }}
+
       - name: Install Cosign
         run: |
           COSIGN_VERSION="v2.5.0"
@@ -58,7 +70,7 @@ jobs:
       # - name: Sign local container image
       #   run: |
       #     cosign generate-key-pair || echo "Keys already exist"
-      #     cosign sign --key cosign.key --force --insecure-ignore-tlog demo-app:${{ github.sha }}
+      #     cosign sign --key cosign.key --force --insecure-ignore-tlog flask-devsecops-demo:${{ github.sha }}
 
       - name: Install OPA
         run: |
