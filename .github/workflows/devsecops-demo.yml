@@ -33,9 +33,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build Docker image
+      - name: Build container image
         run: docker build -t flask-devsecops-demo:${{ needs.checkout.outputs.sha }} .
 
+      - name: Install Trivy
+        run: |
+          TRIVY_VERSION="0.43.1"  # pick a stable release
+          curl -sfL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_0.43.1_Linux-64bit.tar.gz -o trivy.tar.gz
+          tar zxvf trivy.tar.gz
+          sudo mv trivy /usr/local/bin/
+          trivy --version
+
+      - name: Trivy container scan
+        run: trivy image quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+        
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -112,17 +123,7 @@ jobs:
         run: bandit -r .
 
 
-      - name: Install Trivy
-        run: |
-          TRIVY_VERSION="0.43.1"  # pick a stable release
-          curl -sfL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_0.43.1_Linux-64bit.tar.gz -o trivy.tar.gz
-          tar zxvf trivy.tar.gz
-          sudo mv trivy /usr/local/bin/
-          trivy --version
-
-      - name: Trivy container scan
-        run: trivy image quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
-          
+  
 
   opa-check:
     runs-on: ubuntu-latest
