@@ -1,0 +1,24 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# Logs
+*.log
+
+# Docker
+*.tar
+docker-compose.override.yml
+
+# SBOM / scan outputs
+sbom.json
+syft.lock
+gitleaks-report.json
+
+# OS files
+.DS_Store
