@@ -70,13 +70,34 @@ jobs:
         with:
           scan_all: true
 
+  # security-scan:
+  #   runs-on: ubuntu-latest
+  #   needs: checkout
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Install Python and dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y python3-pip
+  #         pip install bandit
+
+  #     - name: Run Bandit security scan
+  #       run: bandit -r .
+
+  #     - name: Trivy Scan
+  #       uses: aquasecurity/trivy-action@v0.32.0
+  #       with:
+  #         image-ref: quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+
+
   security-scan:
     runs-on: ubuntu-latest
     needs: checkout
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Python and dependencies
+      - name: Install Python and Bandit
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip
@@ -85,12 +106,18 @@ jobs:
       - name: Run Bandit security scan
         run: bandit -r .
 
-      - name: Trivy Scan
-        uses: aquasecurity/trivy-action@v0.32.0
-        with:
-          image-ref: quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
+      - name: Install Trivy
+        run: |
+          TRIVY_VERSION="0.43.1"  # pick a stable release
+          curl -sfL https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_0.43.1_Linux-64bit.tar.gz -o trivy.tar.gz
+          tar zxvf trivy.tar.gz
+          sudo mv trivy /usr/local/bin/
+          trivy --version
 
+      - name: Trivy container scan
+        run: trivy image quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
           
+
   opa-check:
     runs-on: ubuntu-latest
     needs: [secret-scan, build-and-publish, security-scan]
