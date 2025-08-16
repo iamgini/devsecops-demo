@@ -90,6 +90,7 @@ jobs:
         with:
           image-ref: quay.io/iamgini/flask-devsecops-demo:${{ needs.checkout.outputs.sha }}
 
+          
   opa-check:
     runs-on: ubuntu-latest
     needs: [secret-scan, build-and-publish, security-scan]
