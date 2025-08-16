@@ -36,3 +36,18 @@ Secrets:
 
 - Add QUAY_USERNAME and QUAY_PASSWORD in your repo settings → Secrets → Actions.
 - Use your Quay robot account token if possible; easier than your personal password.
+
+
+## Test it in Kubernetes
+
+```shell
+kubectl apply -f deployment.yaml
+
+SHA=$(git rev-parse HEAD)
+kubectl set image deployment/flask-demo \
+  flask-demo=quay.io/iamgini/flask-devsecops-demo:$SHA
+kubectl rollout status deployment/flask-demo
+
+kubectl port-forward svc/flask-demo-service 8080:5000
+
+```

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: flask-demo
-          image: quay.io/yourorg/demo-app:latest
+          image: quay.io/iamgini/flask-devsecops-demo:latest
           ports:
             - containerPort: 5000
 ---
@@ -23,10 +23,8 @@ kind: Service
 metadata:
   name: flask-demo-service
 spec:
-  type: NodePort
   selector:
     app: flask-demo
   ports:
-    - port: 5000        # service port
-      targetPort: 5000  # container port
-      nodePort: 30080   # port you can access externally
+    - port: 5000        # Service port
+      targetPort: 5000  # Container port
