@@ -3,7 +3,7 @@ import hashlib
 from datetime import datetime
 
 app = Flask(__name__)
-APP_NAME = "DevSecOps Demo"
+APP_NAME = "DevSecOps Demo for NUS"
 VERSION_FILE = "VERSION.txt"
 
 # Colors for background rotation
