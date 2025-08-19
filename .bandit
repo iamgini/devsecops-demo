@@ -2,4 +2,4 @@
 # skip these rules globally
 # B324 → weak MD5
 # B104 → binding to all interfaces
-skips = B104
+# skips = B104
